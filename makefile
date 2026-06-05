@@ -1,29 +1,43 @@
-# Directorios de origen y destino
-SRC_DIR := src
-BIN_DIR := bin
+# ============================================================
+#  Makefile - Proyecto Juego PvP Metroidvania (Windows/SFML)
+#  Requiere SFML instalado en C:/SFML
+#  Ajusta SFML_DIR si lo tienes en otra ruta
+# ============================================================
 
-SFML := -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lbox2d
+CXX      = g++
+CXXFLAGS = -std=c++17 -Wall -O2
+SFML_DIR = C:/SFML
 
-# Obtener todos los archivos .cpp en el directorio de origen
-CPP_FILES := $(wildcard $(SRC_DIR)/*.cpp)
+INCLUDES = -Iinclude -I$(SFML_DIR)/include
+LIBS     = -L$(SFML_DIR)/lib \
+           -lsfml-graphics -lsfml-window -lsfml-system \
+           -lopengl32 -lwinmm -lgdi32
 
-# Generar los nombres de los archivos .exe en el directorio de destino
-EXE_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(BIN_DIR)/%.exe,$(CPP_FILES))
+SRC_DIR  = src
+OBJ_DIR  = obj
+BIN_DIR  = bin
 
-# Regla para compilar cada archivo .cpp y generar el archivo .exe correspondiente
-$(BIN_DIR)/%.exe: $(SRC_DIR)/%.cpp
-	g++ $< -o $@ $(SFML) -Iinclude
+SOURCES  = $(wildcard $(SRC_DIR)/*.cpp)
+OBJECTS  = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SOURCES))
+TARGET   = $(BIN_DIR)/JuegoProyecto.exe
 
-# Regla por defecto para compilar todos los archivos .cpp
-all: $(EXE_FILES)
+all: dirs $(TARGET)
 
-# Regla para ejecutar cada archivo .exe
-run%: $(BIN_DIR)/%.exe
-	./$<
+dirs:
+	@if not exist $(OBJ_DIR) mkdir $(OBJ_DIR)
+	@if not exist $(BIN_DIR) mkdir $(BIN_DIR)
 
-# Regla para limpiar los archivos generados
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $@ $(LIBS)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
 clean:
-	rm -f $(EXE_FILES)
+	@if exist $(OBJ_DIR) rmdir /s /q $(OBJ_DIR)
+	@if exist $(TARGET)  del /q $(TARGET)
 
-.PHONY: all clean
-.PHONY: run-%
+run: all
+	$(TARGET)
+
+.PHONY: all dirs clean run
