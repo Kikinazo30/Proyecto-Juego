@@ -7,26 +7,25 @@ struct Platform {
     sf::FloatRect      bounds;
 
     Platform(float x, float y, float w, float h, sf::Color color = sf::Color(80, 80, 80)) {
-        shape.setPosition(x, y);
-        shape.setSize({w, h});
+        shape.setPosition({ x, y });
+        shape.setSize({ w, h });
         shape.setFillColor(color);
-        bounds = {x, y, w, h};
+        bounds = { {x, y}, {w, h} };
     }
 };
 
 int main() {
-    const unsigned int WIDTH  = 1280;
+    const unsigned int WIDTH = 1280;
     const unsigned int HEIGHT = 720;
 
     sf::RenderWindow window(
-        sf::VideoMode(WIDTH, HEIGHT),
-        "Proyecto Juego - PvP Metroidvania",
-        sf::Style::Close
+        sf::VideoMode({ WIDTH, HEIGHT }),
+        "Proyecto Juego - PvP Metroidvania"
     );
     window.setFramerateLimit(60);
 
-    Player player1(PlayerID::One,  {200.f, 500.f}, sf::Color(100, 149, 237));
-    Player player2(PlayerID::Two,  {900.f, 500.f}, sf::Color(220, 80,  80));
+    Player player1(PlayerID::One, { 200.f, 500.f }, sf::Color(100, 149, 237));
+    Player player2(PlayerID::Two, { 900.f, 500.f }, sf::Color(220, 80, 80));
 
     std::vector<Platform> platforms = {
         Platform(0.f,    650.f, 1280.f, 70.f,  sf::Color(60, 60, 60)),
@@ -47,37 +46,18 @@ int main() {
     for (const auto& p : platforms)
         colliders.push_back(p.bounds);
 
-    sf::Font font;
-    bool fontLoaded = font.loadFromFile("assets/fonts/arial.ttf");
-
-    sf::Text label1, label2, hud;
-    if (fontLoaded) {
-        label1.setFont(font); label1.setString("J1");
-        label1.setCharacterSize(16); label1.setFillColor(sf::Color::White);
-
-        label2.setFont(font); label2.setString("J2");
-        label2.setCharacterSize(16); label2.setFillColor(sf::Color::White);
-
-        hud.setFont(font);
-        hud.setString("J1: A/D mover | Espacio saltar | LShift dash      J2: Flechas mover | Enter saltar | RShift dash");
-        hud.setCharacterSize(14);
-        hud.setFillColor(sf::Color(180, 180, 180));
-        hud.setPosition(10.f, 690.f);
-    }
-
-    sf::RectangleShape background({(float)WIDTH, (float)HEIGHT});
+    sf::RectangleShape background({ (float)WIDTH, (float)HEIGHT });
     background.setFillColor(sf::Color(15, 15, 25));
 
     sf::Clock clock;
 
     while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
+        while (const std::optional event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>())
                 window.close();
-            if (event.type == sf::Event::KeyPressed &&
-                event.key.code == sf::Keyboard::Escape)
-                window.close();
+            if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+                if (keyPressed->code == sf::Keyboard::Key::Escape)
+                    window.close();
         }
 
         float dt = clock.restart().asSeconds();
@@ -88,11 +68,6 @@ int main() {
         player1.update(dt, colliders);
         player2.update(dt, colliders);
 
-        if (fontLoaded) {
-            label1.setPosition(player1.getPosition().x + 10.f, player1.getPosition().y - 22.f);
-            label2.setPosition(player2.getPosition().x + 10.f, player2.getPosition().y - 22.f);
-        }
-
         window.clear();
         window.draw(background);
 
@@ -101,12 +76,6 @@ int main() {
 
         player1.draw(window);
         player2.draw(window);
-
-        if (fontLoaded) {
-            window.draw(label1);
-            window.draw(label2);
-            window.draw(hud);
-        }
 
         window.display();
     }

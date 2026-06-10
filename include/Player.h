@@ -26,11 +26,11 @@ private:
     bool isDashing;
     float dashTimer;
 
-    static constexpr float SPEED         = 200.f;
-    static constexpr float JUMP_FORCE    = -550.f;
-    static constexpr float GRAVITY       = 1200.f;
-    static constexpr float MAX_FALL      = 600.f;
-    static constexpr float DASH_SPEED    = 500.f;
+    static constexpr float SPEED = 200.f;
+    static constexpr float JUMP_FORCE = -550.f;
+    static constexpr float GRAVITY = 1200.f;
+    static constexpr float MAX_FALL = 600.f;
+    static constexpr float DASH_SPEED = 500.f;
     static constexpr float DASH_DURATION = 0.15f;
 
     sf::Keyboard::Key keyLeft, keyRight, keyJump, keyDash;
