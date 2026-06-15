@@ -3,23 +3,36 @@
 
 Player::Player(PlayerID id, sf::Vector2f startPos, sf::Color color)
     : id(id), position(startPos), velocity(0.f, 0.f),
-    onGround(false), canDash(true), isDashing(false), dashTimer(0.f)
+      onGround(false), canDash(true), isDashing(false), dashTimer(0.f),
+      hp(100), maxHp(100), isAttacking(false), attackTimer(0.f), facingDir(1.f)
 {
     shape.setSize({ 40.f, 50.f });
-    shape.setFillColor(color);
     shape.setPosition(position);
 
+    // --- NUEVO: Cargar los sprites reales desde tus carpetas ---
     if (id == PlayerID::One) {
+        if (texture.loadFromFile("assets/images/erick sprit.png")) {
+            shape.setTexture(&texture);
+        }
+        shape.setFillColor(sf::Color::White); // Blanco para que no altere los colores del sprite
+
         keyLeft = sf::Keyboard::Key::A;
         keyRight = sf::Keyboard::Key::D;
         keyJump = sf::Keyboard::Key::Space;
         keyDash = sf::Keyboard::Key::LShift;
+        keyAttack = sf::Keyboard::Key::F; 
     }
     else {
+        if (texture.loadFromFile("assets/images/kike sprit.jpg.jpeg")) {
+            shape.setTexture(&texture);
+        }
+        shape.setFillColor(sf::Color::White); 
+
         keyLeft = sf::Keyboard::Key::Left;
         keyRight = sf::Keyboard::Key::Right;
         keyJump = sf::Keyboard::Key::Enter;
         keyDash = sf::Keyboard::Key::RShift;
+        keyAttack = sf::Keyboard::Key::P; 
     }
 }
 
@@ -40,13 +53,25 @@ void Player::handleInput() {
 
     if (!isDashing) {
         velocity.x = 0.f;
-        if (sf::Keyboard::isKeyPressed(keyLeft))  velocity.x = -SPEED;
-        if (sf::Keyboard::isKeyPressed(keyRight)) velocity.x = SPEED;
+        
+        if (sf::Keyboard::isKeyPressed(keyLeft)) {
+            velocity.x = -SPEED;
+            facingDir = -1.f; 
+        }
+        if (sf::Keyboard::isKeyPressed(keyRight)) {
+            velocity.x = SPEED;
+            facingDir = 1.f;
+        }
 
         if (sf::Keyboard::isKeyPressed(keyJump) && onGround) {
             velocity.y = JUMP_FORCE;
             onGround = false;
         }
+    }
+
+    if (sf::Keyboard::isKeyPressed(keyAttack) && !isAttacking) {
+        isAttacking = true;
+        attackTimer = ATTACK_DURATION;
     }
 }
 
@@ -107,6 +132,13 @@ void Player::update(float dt, const std::vector<sf::FloatRect>& platforms) {
         }
     }
 
+    if (isAttacking) {
+        attackTimer -= dt;
+        if (attackTimer <= 0.f) {
+            isAttacking = false;
+        }
+    }
+
     applyGravity(dt);
 
     position.x += velocity.x * dt;
@@ -115,10 +147,27 @@ void Player::update(float dt, const std::vector<sf::FloatRect>& platforms) {
     shape.setPosition(position);
     resolveCollisions(platforms);
     shape.setPosition(position);
+
+    // --- NUEVO: Voltear el Sprite horizontalmente usando el TextureRect de SFML 3 ---
+    sf::Vector2i texSize = static_cast<sf::Vector2i>(texture.getSize());
+    if (facingDir == 1.f) {
+        // Mirando a la derecha: coordenadas normales
+        shape.setTextureRect({ {0, 0}, {texSize.x, texSize.y} });
+    } else {
+        // Mirando a la izquierda: invertimos el eje X empezando desde el final del ancho
+        shape.setTextureRect({ {texSize.x, 0}, {-texSize.x, texSize.y} });
+    }
 }
 
 void Player::draw(sf::RenderWindow& window) {
     window.draw(shape);
+
+    if (isAttacking) {
+        sf::RectangleShape attackVisual(getAttackBounds().size);
+        attackVisual.setPosition(getAttackBounds().position);
+        attackVisual.setFillColor(sf::Color(255, 255, 255, 120)); 
+        window.draw(attackVisual);
+    }
 }
 
 sf::FloatRect Player::getBounds() const {
@@ -127,4 +176,32 @@ sf::FloatRect Player::getBounds() const {
 
 sf::Vector2f Player::getPosition() const {
     return position;
+}
+
+void Player::takeDamage(int amount) {
+    hp -= amount;
+    if (hp < 0) hp = 0;
+}
+
+bool Player::getIsAttacking() const {
+    return isAttacking;
+}
+
+int Player::getHp() const {
+    return hp;
+}
+
+sf::FloatRect Player::getAttackBounds() const {
+    sf::Vector2f attackSize(45.f, 40.f);
+    float attackX = 0.f;
+
+    if (facingDir == 1.f) {
+        attackX = position.x + shape.getSize().x;
+    } else {
+        attackX = position.x - attackSize.x;
+    }
+
+    float attackY = position.y + (shape.getSize().y / 2.f) - (attackSize.y / 2.f);
+
+    return { {attackX, attackY}, attackSize };
 }
