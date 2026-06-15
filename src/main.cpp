@@ -49,6 +49,23 @@ int main() {
     sf::RectangleShape background({ (float)WIDTH, (float)HEIGHT });
     background.setFillColor(sf::Color(15, 15, 25));
 
+    // --- INICIO DEL CÓDIGO NUEVO (CARGAR IMAGEN) ---
+    sf::Texture backgroundTexture;
+    // Recuerda cambiar "tu_fondo.jpg" por el nombre de tu archivo en GitHub
+    if (backgroundTexture.loadFromFile("assets/images/tu_fondo.jpg")) {
+        // Carga exitosa
+    }
+    sf::Sprite backgroundSprite;
+    backgroundSprite.setTexture(backgroundTexture);
+    
+    sf::Vector2u textureSize = backgroundTexture.getSize();
+    if (textureSize.x > 0 && textureSize.y > 0) {
+        float scaleX = (float)WIDTH / textureSize.x;
+        float scaleY = (float)HEIGHT / textureSize.y;
+        backgroundSprite.setScale({ scaleX, scaleY });
+    }
+    // --- FIN DEL CÓDIGO NUEVO ---
+
     sf::Clock clock;
 
     while (window.isOpen()) {
@@ -70,6 +87,11 @@ int main() {
 
         window.clear();
         window.draw(background);
+
+        // --- INICIO DEL CÓDIGO NUEVO (DIBUJAR IMAGEN) ---
+        // Se dibuja justo después de tu fondo original para que lo cubra
+        window.draw(backgroundSprite);
+        // --- FIN DEL CÓDIGO NUEVO ---
 
         for (const auto& p : platforms)
             window.draw(p.shape);
