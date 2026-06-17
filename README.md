@@ -1,4 +1,4 @@
-# [Nombre del Juego]PENDIENTE
+# [Duelo Montañoso]
 
 ## 📝 Descripción del Proyecto
 
